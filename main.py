@@ -37,7 +37,7 @@ def index():
     ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
       {"$group": {
           "_id": {
-            "year" : {"$year" : "$_id"}, 
+            "year" : {"$year" : "$_id"},
             "month" : {"$month" : "$_id"},
             "day" : {"$dayOfMonth" : "$_id"},
             "hour": {"$hour" : "$_id"},
@@ -53,9 +53,9 @@ def index():
           "count":{"$sum":1}
           }
       },
-      {"$sort": {"_id":-1}}
+       {"$sort": {"_id.year":-1,"_id.month":-1,"_id.day":-1}}
     ])
-    data = dict()    
+    data = dict()
     data['type']="full"
     data['data']=list(ret)
     return render_template('chart.html', data=data)
@@ -66,7 +66,7 @@ def daily():
     ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
       {"$group": {
          "_id": {
-            "year" : {"$year" : "$_id"}, 
+            "year" : {"$year" : "$_id"},
             "month" : {"$month" : "$_id"},
             "day" : {"$dayOfMonth" : "$_id"},
             "hour": {"$multiply": [0,{"$hour" : "$_id"}]},
@@ -81,7 +81,7 @@ def daily():
           "upload_avg":{"$avg":"$upload"},
           "count":{"$sum":1}
           }},
-      {"$sort": {"_id":-1}}
+       {"$sort": {"_id.year":-1,"_id.month":-1,"_id.day":-1}}
     ])
     data = dict()
     data['type']=str("daily")
@@ -101,7 +101,7 @@ def hourly():
           "count":{"$sum":1}
           }
       },
-      {"$sort": {"_id":-1}}
+       {"$sort": {"_id.year":-1,"_id.month":-1,"_id.day":-1}}
       ])
     data = dict()
     data['type']=str("hourly")
