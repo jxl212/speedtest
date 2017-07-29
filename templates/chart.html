@@ -1,0 +1,123 @@
+<html>
+<head>
+  <!--Load the AJAX API-->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['annotationchart','corechart','table','scatter']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+      var data = new google.visualization.DataTable();
+        data.addColumn('datetime', 'Time');
+        data.addColumn('number', 'download');
+        data.addColumn({id:'d0', type:'number', role:'interval'});
+        data.addColumn({id:'d1', type:'number', role:'interval'});
+        data.addColumn('number', 'upload');
+        data.addColumn({id:'u0', type:'number', role:'interval'});
+        data.addColumn({id:'u1', type:'number', role:'interval'});
+   //     data.addColumn('number', 'sample count');
+
+        var rows = [
+          {% for i in data['data'] %}
+              [new Date(year={{ i['_id']['year'] }},month={{ i['_id']['month']-1 }},date={{ i['_id']['day'] }}, hours={{ i['_id']['hour'] }},minutes={{ i['_id']['minutes'] }},seconds={{ i['_id']['seconds'] }}),
+              {{ i['download_avg'] }}    ,
+              {% if i['download_min'] %}{{ i['download_min'] }} {% else %}undefined{% endif %},
+              {% if i['download_max'] %}{{ i['download_max'] }} {% else %}undefined{% endif %},
+              {{ i['upload_avg'] }}    ,
+              {% if i['upload_min'] %}{{ i['upload_min'] }} {% else %}undefined{% endif %},
+              {% if i['upload_max'] %}{{ i['upload_max'] }} {% else %}undefined{% endif %},
+               ],
+          {% endfor %}
+        ];
+        data.addRows(rows);
+        var options_lines = {};
+
+        {% if data.type != 'daily' %}
+           options_lines = {
+           	  // Allow multiple
+           	  // simultaneous selections.
+           	  selectionMode: 'series',
+           	  // Trigger tooltips
+           	  // on selections.
+           	  tooltip: {trigger: 'selection'},
+           	  // Group selections
+           	  // by x-value.
+           	  aggregationTarget: 'category',
+           	  trendlines: {
+           	        0: {
+           	          type: 'polynomial',
+           	          degree: 10,
+           	          lineWidth: 2,
+           	          opacity: 1,
+           	        }
+           	      }
+
+           };
+           var chart_lines = new google.visualization.AnnotationChart(document.getElementById('chart_lines'));
+        {% else %}
+           var chart_lines = new google.visualization.LineChart(document.getElementById('chart_lines'));
+           options_lines = {
+                      title: 'MB/s',
+                      curveType: 'function',
+                      lineWidth: 2,
+                      intervals: { 'style':'area'},
+                      displayAnnotations: true,
+                   };
+        {% endif %}
+
+        // var chart_lines = new google.visualization.LineChart(document.getElementById('chart_lines'));
+        var table_chart = new google.visualization.Table(document.getElementById('table_div'));
+        var table_options = {
+           showRowNumber:true
+        };
+        table_chart.draw(data, table_options);
+        chart_lines.draw(data, options_lines);
+        
+        google.visualization.events.addListener(table_chart, 'select', function() {
+          var selectedRows = table_chart.getSelection()
+          console.log("table_chart selection:", selectedRows);
+
+          try {
+            // statements
+            if(selectedRows.length > 0){
+              selectedRows[0].column=null;
+            }
+          } catch(e) {
+            // statements
+            console.log(selectedRows);
+            console.log(e);
+          }
+          chart_lines.setSelection(selectedRows);
+        });
+        google.visualization.events.addListener(chart_lines, 'select', function() {
+          var selectedRows = chart_lines.getSelection();
+          console.log("chart_lines selection:", selectedRows);
+
+          try {
+            // statements
+            if(selectedRows.length > 0){
+              selectedRows[0].column=null;
+            }
+          } catch(e) {
+            // statements
+            console.log(selectedRows);
+            console.log(e);
+          }
+          table_chart.setSelection(selectedRows);
+        });
+      }
+
+  </script>
+</head>
+
+<body>
+
+  <!--Div that will hold the pie chart-->
+  <div style="text-align: center;">
+  <div id='chart_lines' style='width:100%;min-width: 480px; min-height: 360px;'></div>
+  <div id='table_div' style='width:100%;min-width: 480px; min-height: 360px;'></div>
+  </div>
+
+</body>
+
+</html>

@@ -1,0 +1,144 @@
+# Copyright 2015 Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START app]
+import logging
+
+from flask import Flask
+from flask import render_template
+import datetime, pymongo
+
+
+app = Flask(__name__)
+
+username = 'speedtest'
+password = 'speedtest'
+shard0="box1-shard-00-00-kkflw.mongodb.net:27017"
+shard1="box1-shard-00-01-kkflw.mongodb.net:27017"
+shard2="box1-shard-00-02-kkflw.mongodb.net:27017"
+client = pymongo.MongoClient('mongodb://'+username+':'+password+'@'+shard0+','+shard1+','+shard2+'/speedtest?ssl=true&replicaSet=Box1-shard-0&authSource=admin')
+# ret = col.find({},{"_id":0,"timestamp":1,"download":1,"upload":1}).sort("timestamp", direction=1)
+
+
+@app.route('/')
+def index():
+    col = client.speedtest.get_collection('speedtests')
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+      {"$group": {
+          "_id": {
+            "year" : {"$year" : "$_id"}, 
+            "month" : {"$month" : "$_id"},
+            "day" : {"$dayOfMonth" : "$_id"},
+            "hour": {"$hour" : "$_id"},
+            "minutes" : {"$minute":"$_id"},
+            "seconds": {"$second" : "$_id"}
+          },
+          "download_min":{"$min": "$download"},
+          "download_max":{"$max": "$download"},
+          "download_avg":{"$avg":"$download"},
+          "upload_min":{"$min": "$download"},
+          "upload_max":{"$max": "$download"},
+          "upload_avg":{"$avg" : "$upload"},
+          "count":{"$sum":1}
+          }
+      },
+      {"$sort": {"_id":-1}}
+    ])
+    data = dict()    
+    data['type']="full"
+    data['data']=list(ret)
+    return render_template('chart.html', data=data)
+
+@app.route('/daily')
+def daily():
+    col = client.speedtest.get_collection('speedtests')
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+      {"$group": {
+         "_id": {
+            "year" : {"$year" : "$_id"}, 
+            "month" : {"$month" : "$_id"},
+            "day" : {"$dayOfMonth" : "$_id"},
+            "hour": {"$multiply": [0,{"$hour" : "$_id"}]},
+            "minutes" : {"$multiply": [0, {"$minute":"$_id"}]},
+            "seconds": {"$multiply": [0, {"$second" : "$_id"}]}
+          },
+          "download_min":{"$min":"$download"},
+          "download_max":{"$max":"$download"},
+          "download_avg":{"$avg":"$download"},
+          "upload_min":{"$min":"$upload"},
+          "upload_max":{"$max":"$upload"},
+          "upload_avg":{"$avg":"$upload"},
+          "count":{"$sum":1}
+          }},
+      {"$sort": {"_id":-1}}
+    ])
+    data = dict()
+    data['type']=str("daily")
+    data['data']=list(ret)
+    return render_template('chart.html', data=data)
+
+@app.route('/hourly')
+def hourly():
+    col = client.speedtest.get_collection('speedtests')
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+      {"$group": {
+          "_id": {
+            "hour": {"$hour" : "$_id"}
+          },
+          "download_avg":{"$push":{"$multiply": [1.25e-7,"$download"]}},
+          "upload_avg":{"$push":{"$multiply": [1.25e-7,"$upload"]}},
+          "count":{"$sum":1}
+          }
+      },
+      {"$sort": {"_id":-1}}
+      ])
+    data = dict()
+    data['type']=str("hourly")
+    data['data']=list(ret)
+    return render_template('chart_.html', data=data)
+
+@app.route('/weekly')
+def weekly():
+    col = client.speedtest.get_collection('speedtests')
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+      {"$group": {
+          "_id": {
+            "dayOfWeek": {"$dayOfWeek" : "$_id"}
+          },
+          "download_avg":{"$avg":{"$multiply": [1.25e-7,"$download"]}},
+          "upload_avg":{"$avg":{"$multiply": [1.25e-7,"$upload"]}},
+          "count":{"$sum":1}
+          }
+      },
+      {"$sort": {"_id.dayOfWeek":-1}}
+      ])
+    data = dict()
+    data['type']=str("dayOfWeek")
+    data['data']=list(ret)
+    return render_template('chart_.html', data=data)
+
+@app.errorhandler(500)
+def server_error(e):
+    logging.exception('An error occurred during a request.')
+    return """
+    An internal error occurred: <pre>{}</pre>
+    See logs for full stacktrace.
+    """.format(e), 500
+
+
+if __name__ == '__main__':
+    # This is used when running locally. Gunicorn is used to run the
+    # application on Google App Engine. See entrypoint in app.yaml.
+    app.run(host='127.0.0.1', port=8080, debug=True)
+# [END app]

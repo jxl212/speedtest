@@ -1,0 +1,83 @@
+<html>
+<head>
+  <!--Load the AJAX API-->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['annotationchart','corechart','table','scatter']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+      var data = new google.visualization.DataTable();
+      data.addColumn('number', '{{data['type']}}');
+      data.addColumn('number', 'download');
+      
+      var rows = [
+          {% for i in data['data'] %}
+          [{{ i['_id'].get(data['type']) }},{{i['download_avg']}}],
+          {% endfor %}
+          ];
+        data.addRows(rows);
+        var options_lines = {};
+
+        
+         
+           var chart_lines = new google.visualization.Table(document.getElementById('chart_lines'));
+        
+        
+
+        // var chart_lines = new google.visualization.LineChart(document.getElementById('chart_lines'));
+        var table_chart = new google.visualization.Table(document.getElementById('table_div'));
+        var table_options = {
+           showRowNumber:true
+        };
+        table_chart.draw(data, table_options);
+        chart_lines.draw(data, options_lines);
+        
+        google.visualization.events.addListener(table_chart, 'select', function() {
+          var selectedRows = table_chart.getSelection()
+          console.log("table_chart selection:", selectedRows);
+
+          try {
+            // statements
+            if(selectedRows.length > 0){
+              selectedRows[0].column=null;
+            }
+          } catch(e) {
+            // statements
+            console.log(selectedRows);
+            console.log(e);
+          }
+          chart_lines.setSelection(selectedRows);
+        });
+        google.visualization.events.addListener(chart_lines, 'select', function() {
+          var selectedRows = chart_lines.getSelection();
+          console.log("chart_lines selection:", selectedRows);
+
+          try {
+            // statements
+            if(selectedRows.length > 0){
+              selectedRows[0].column=null;
+            }
+          } catch(e) {
+            // statements
+            console.log(selectedRows);
+            console.log(e);
+          }
+          table_chart.setSelection(selectedRows);
+        });
+      }
+
+  </script>
+</head>
+
+<body>
+
+  <!--Div that will hold the pie chart-->
+  <div style="text-align: center;">
+  <div id='chart_lines' style='width:100%;min-width: 480px; min-height: 360px;'></div>
+  <div id='table_div' style='width:100%;min-width: 480px; min-height: 360px;'></div>
+  </div>
+
+</body>
+
+</html>

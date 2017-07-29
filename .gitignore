@@ -1,0 +1,10 @@
+**/.DS_Store
+*.pyc
+service-account.json
+client-secrets.json
+__pycache__
+lib
+.cache
+tmp
+env
+activate
