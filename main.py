@@ -30,11 +30,12 @@ shard2="box1-shard-00-02-kkflw.mongodb.net:27017"
 client = pymongo.MongoClient('mongodb://'+username+':'+password+'@'+shard0+','+shard1+','+shard2+'/speedtest?ssl=true&replicaSet=Box1-shard-0&authSource=admin')
 # ret = col.find({},{"_id":0,"timestamp":1,"download":1,"upload":1}).sort("timestamp", direction=1)
 
+start_date=datetime.datetime(year=2017,month=1,day=1)
 
 @app.route('/')
 def index():
     col = client.speedtest.get_collection('speedtests')
-    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": start_date}}},
       {"$group": {
           "_id": {
             "year" : {"$year" : "$_id"},
@@ -44,11 +45,11 @@ def index():
             "minutes" : {"$minute":"$_id"},
             "seconds": {"$second" : "$_id"}
           },
-          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
+          # "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
+          # "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
           "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
-          "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
-          "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
+          # "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
+          # "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_avg":{"$avg" : {"$multiply": [1.25e-7, "$upload"]}},
           "count":{"$sum":1}
           }
@@ -63,22 +64,22 @@ def index():
 @app.route('/daily')
 def daily():
     col = client.speedtest.get_collection('speedtests')
-    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": start_date}}},
       {"$group": {
          "_id": {
             "year" : {"$year" : "$_id"},
             "month" : {"$month" : "$_id"},
-            "day" : {"$dayOfMonth" : "$_id"},
-            "hour": {"$multiply": [0,{"$hour" : "$_id"}]},
-            "minutes" : {"$multiply": [0, {"$minute":"$_id"}]},
-            "seconds": {"$multiply": [0, {"$second" : "$_id"}]}
+            "day" : {"$dayOfMonth" : "$_id"}
+            # "hour": {"$multiply": [0,{"$hour" : "$_id"}]},
+            # "minutes" : {"$multiply": [0, {"$minute":"$_id"}]},
+            # "seconds": {"$multiply": [0, {"$second" : "$_id"}]}
           },
-          "download_min":{"$min":"$download"},
-          "download_max":{"$max":"$download"},
-          "download_avg":{"$avg":"$download"},
-          "upload_min":{"$min":"$upload"},
-          "upload_max":{"$max":"$upload"},
-          "upload_avg":{"$avg":"$upload"},
+          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
+          "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
+          "upload_avg":{"$avg": {"$multiply": [1.25e-7, "$upload"]}},
           "count":{"$sum":1}
           }},
        {"$sort": {"_id.year":-1,"_id.month":-1,"_id.day":-1}}
@@ -91,10 +92,10 @@ def daily():
 @app.route('/hourly')
 def hourly():
     col = client.speedtest.get_collection('speedtests')
-    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": start_date}}},
       {"$group": {
           "_id": {
-            "hour": {"$hour" : "$_id"}
+            "hourly": {"$hour" : "$_id"}
           },
           "download_avg":{"$push":{"$multiply": [1.25e-7,"$download"]}},
           "upload_avg":{"$push":{"$multiply": [1.25e-7,"$upload"]}},
@@ -106,12 +107,15 @@ def hourly():
     data = dict()
     data['type']=str("hourly")
     data['data']=list(ret)
+    for d in data['data']:
+      d['download_avg'] = [ [int(d['_id']['hourly']), float("{}".format(x))] for x in d['download_avg']]
+      
     return render_template('chart_.html', data=data)
 
 @app.route('/weekly')
 def weekly():
     col = client.speedtest.get_collection('speedtests')
-    ret = col.aggregate([{"$match": {"_id" : {"$gt": datetime.datetime(year=2017,month=7,day=15)}}},
+    ret = col.aggregate([{"$match": {"_id" : {"$gt": start_date}}},
       {"$group": {
           "_id": {
             "dayOfWeek": {"$dayOfWeek" : "$_id"}

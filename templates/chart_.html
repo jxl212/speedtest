@@ -11,17 +11,21 @@
       data.addColumn('number', '{{data['type']}}');
       data.addColumn('number', 'download');
       
-      var rows = [
+      
+      data.addRows([
           {% for i in data['data'] %}
-          [{{ i['_id'].get(data['type']) }},{{i['download_avg']}}],
+          {% for x in i['download_avg'] %}
+            {{x}},
           {% endfor %}
-          ];
-        data.addRows(rows);
+          
+          {% endfor %}
+          ]);
+        
         var options_lines = {};
 
         
          
-           var chart_lines = new google.visualization.Table(document.getElementById('chart_lines'));
+           var chart_lines = new google.visualization.ScatterChart(document.getElementById('chart_lines'));
         
         
 
