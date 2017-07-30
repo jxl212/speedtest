@@ -44,12 +44,12 @@ def index():
             "minutes" : {"$minute":"$_id"},
             "seconds": {"$second" : "$_id"}
           },
-          "download_min":{"$multiply": [1.25e-7, {"$min": "$download"}]},
-          "download_max":{"$multiply": [1.25e-7, {"$max": "$download"}]},
-          "download_avg":{"$multiply": [1.25e-7, {"$avg":"$download"}]},
-          "upload_min":{"$multiply": [1.25e-7, {"$min": "$download"}]},
-          "upload_max":{"$multiply": [1.25e-7, {"$max": "$download"}]},
-          "upload_avg":{"$multiply": [1.25e-7, {"$avg" : "$upload"}]},
+          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
+          "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
+          "upload_avg":{"$avg" : {"$multiply": [1.25e-7, "$upload"]}},
           "count":{"$sum":1}
           }
       },
