@@ -17,8 +17,8 @@ import logging
 
 from flask import Flask
 from flask import render_template
-import datetime, pymongo, os
-
+import datetime, pymongo
+import os, pprint
 
 app = Flask(__name__)
 
@@ -45,9 +45,9 @@ def index():
             "minutes" : {"$minute":"$_id"},
             "seconds": {"$second" : "$_id"}
           },
-          # "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
-          # "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          # "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}},
+          # "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}},
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}},
           # "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
           # "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_avg":{"$avg" : {"$multiply": [1.25e-7, "$upload"]}},
@@ -58,6 +58,7 @@ def index():
     ])
     data = dict()
     data['type']="full"
+    data['HOSTNAME']=os.environ.get('HOSTNAME', '??')
     data['data']=list(ret)
     return render_template('chart.html', data=data)
 
@@ -69,23 +70,25 @@ def daily():
          "_id": {
             "year" : {"$year" : "$_id"},
             "month" : {"$month" : "$_id"},
-            "day" : {"$dayOfMonth" : "$_id"}
+            "day" : {"$dayOfMonth" : "$_id"},
+            "dayOfYear" : {"$dayOfYear" : "$_id"}
             # "hour": {"$multiply": [0,{"$hour" : "$_id"}]},
             # "minutes" : {"$multiply": [0, {"$minute":"$_id"}]},
             # "seconds": {"$multiply": [0, {"$second" : "$_id"}]}
           },
-          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}},
+          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}},
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}},
           "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_avg":{"$avg": {"$multiply": [1.25e-7, "$upload"]}},
           "count":{"$sum":1}
           }},
-       {"$sort": {"_id.year":-1,"_id.month":-1,"_id.day":-1}}
+       {"$sort": {"_id.dayOfYear":-1}}
     ])
     data = dict()
     data['type']=str("daily")
+    data['HOSTNAME']=os.environ.get('HOSTNAME', '??')
     data['data']=list(ret)
     return render_template('chart.html', data=data)
 
@@ -106,10 +109,11 @@ def hourly():
       ])
     data = dict()
     data['type']=str("hourly")
+    data['HOSTNAME']=os.environ.get('HOSTNAME', '??')
     data['data']=list(ret)
     for d in data['data']:
       d['download_avg'] = [ [int(d['_id']['hourly']), float("{}".format(x))] for x in d['download_avg']]
-      
+
     return render_template('chart_.html', data=data)
 
 @app.route('/weekly')
@@ -129,8 +133,20 @@ def weekly():
       ])
     data = dict()
     data['type']=str("dayOfWeek")
+    data['HOSTNAME']=os.environ.get('HOSTNAME', '??')
     data['data']=list(ret)
     return render_template('chart_.html', data=data)
+
+@app.route("/_env")
+def get_env():
+
+  html=""
+  for i in os.environ.items():
+    html = html + "<div><code>{}</code></div>".format(i)
+  html = "<div>"+html+"</div>"
+  title = "<h1>[~.1 ~]</h1>"
+
+  return title+html
 
 @app.errorhandler(500)
 def server_error(e):
@@ -144,6 +160,7 @@ def server_error(e):
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
-    import os
+
+
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000), debug=True)
 # [END app]

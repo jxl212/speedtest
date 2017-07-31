@@ -8,13 +8,13 @@
 
       function drawChart() {
       var data = new google.visualization.DataTable();
-        data.addColumn({% if data.type != 'daily' %} 'datetime'{%else%}'date'{%endif%}, 'Time');
+        data.addColumn({type:{% if data.type != 'daily' %} 'datetime'{%else%}'date'{%endif%}, lable:'Time', role:'domain'});
         data.addColumn('number', 'download');
-        data.addColumn({id:'d0', type:'number', role:'interval'});
-        data.addColumn({id:'d1', type:'number', role:'interval'});
-        data.addColumn('number', 'upload');
-        data.addColumn({id:'u0', type:'number', role:'interval'});
-        data.addColumn({id:'u1', type:'number', role:'interval'});
+        data.addColumn({id:'down1',type:'number',role:'interval'});
+        data.addColumn({id:'down2',type:'number',role:'interval'});
+        data.addColumn('number','up');
+        data.addColumn({id:'up1',type:'number',role:'interval'});
+        data.addColumn({id:'up2',type:'number' ,role:'interval'});
    //     data.addColumn('number', 'sample count');
 
         var rows = [
@@ -26,6 +26,7 @@
               {{ i['upload_avg'] or 0}},
               {{ i['upload_min'] or ''}},
               {{ i['upload_max'] or ''}},
+              
                ],
           {% endfor %}
         ];
@@ -53,9 +54,9 @@
            	      }
 
            };
-           // var chart_lines = new google.visualization.AnnotationChart(document.getElementById('chart_lines'));
+           var chart_lines = new google.visualization.AnnotationChart(document.getElementById('chart_lines'));
         {% else %}
-           // var chart_lines = new google.visualization.LineChart(document.getElementById('chart_lines'));
+           var chart_lines = new google.visualization.LineChart(document.getElementById('chart_lines'));
            options_lines = {
                       title: 'MB/s',
                       curveType: 'function',
@@ -65,7 +66,7 @@
                    };
         {% endif %}
 
-        var chart_lines = new google.visualization.AnnotationChart(document.getElementById('chart_lines'));
+        // var chart_lines = new google.visualization.AnnotationChart(document.getElementById('chart_lines'));
         var table_chart = new google.visualization.Table(document.getElementById('table_div'));
         var table_options = {
            showRowNumber:true
@@ -113,7 +114,7 @@
 <body>
 
   <!--Div that will hold the pie chart-->
-  <div style="text-align: center;">
+  <div style="text-align: center;"><h3>{{data['HOSTNAME']}}</h3>
   <div id='chart_lines' style='width:100%;min-width: 480px; min-height: 360px;'></div>
   <div id='table_div' style='width:100%;min-width: 480px; min-height: 360px;'></div>
   </div>
