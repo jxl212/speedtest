@@ -17,13 +17,8 @@ import logging
 
 from flask import Flask
 from flask import render_template
-<<<<<<< HEAD
 import datetime, pymongo
 import os, pprint
-=======
-import datetime, pymongo, os
-
->>>>>>> origin/master
 
 app = Flask(__name__)
 
@@ -50,9 +45,9 @@ def index():
             "minutes" : {"$minute":"$_id"},
             "seconds": {"$second" : "$_id"}
           },
-          # "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
-          # "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          # "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}},
+          # "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}},
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}},
           # "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
           # "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_avg":{"$avg" : {"$multiply": [1.25e-7, "$upload"]}},
@@ -81,9 +76,9 @@ def daily():
             # "minutes" : {"$multiply": [0, {"$minute":"$_id"}]},
             # "seconds": {"$multiply": [0, {"$second" : "$_id"}]}
           },
-          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}}, 
-          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}}, 
+          "download_min":{"$min": {"$multiply": [1.25e-7, "$download"]}},
+          "download_max":{"$max": {"$multiply": [1.25e-7, "$download"]}},
+          "download_avg":{"$avg": {"$multiply": [1.25e-7, "$download"]}},
           "upload_min":{"$min": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_max":{"$max": {"$multiply": [1.25e-7, "$upload"]}},
           "upload_avg":{"$avg": {"$multiply": [1.25e-7, "$upload"]}},
@@ -118,7 +113,7 @@ def hourly():
     data['data']=list(ret)
     for d in data['data']:
       d['download_avg'] = [ [int(d['_id']['hourly']), float("{}".format(x))] for x in d['download_avg']]
-      
+
     return render_template('chart_.html', data=data)
 
 @app.route('/weekly')
@@ -152,7 +147,7 @@ def get_env():
   title = "<h1>[~.1 ~]</h1>"
 
   return title+html
-    
+
 @app.errorhandler(500)
 def server_error(e):
     logging.exception('An error occurred during a request.')
@@ -165,7 +160,7 @@ def server_error(e):
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
-    
+
 
     app.run(host='0.0.0.0', port=os.environ.get('PORT', 5000), debug=True)
 # [END app]
