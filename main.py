@@ -22,8 +22,8 @@ import datetime, pymongo
 
 app = Flask(__name__)
 
-username = 'speedtest'
-password = 'speedtest'
+username = os.environ.get('mongo_user')
+password = os.environ.get('mongo_pass')
 shard0="box1-shard-00-00-kkflw.mongodb.net:27017"
 shard1="box1-shard-00-01-kkflw.mongodb.net:27017"
 shard2="box1-shard-00-02-kkflw.mongodb.net:27017"
