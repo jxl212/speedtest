@@ -17,17 +17,18 @@ import logging
 
 from flask import Flask
 from flask import render_template
-import datetime, pymongo
-import os, pprint
+import datetime, pymongo, os
 
 app = Flask(__name__)
 
-username = os.environ.get('mongo_user')
-password = os.environ.get('mongo_pass')
+username = os.environ.get('mongo_user') or ""
+password = os.environ.get('mongo_pass') or ""
+credential =''
+if username != '' and password != '': username+":"+password+"@"
 shard0="box1-shard-00-00-kkflw.mongodb.net:27017"
 shard1="box1-shard-00-01-kkflw.mongodb.net:27017"
 shard2="box1-shard-00-02-kkflw.mongodb.net:27017"
-client = pymongo.MongoClient('mongodb://'+username+':'+password+'@'+shard0+','+shard1+','+shard2+'/speedtest?ssl=true&replicaSet=Box1-shard-0&authSource=admin')
+client = pymongo.MongoClient('mongodb://'+credential+shard0+','+shard1+','+shard2+'/speedtest?ssl=true&replicaSet=Box1-shard-0&authSource=admin')
 # ret = col.find({},{"_id":0,"timestamp":1,"download":1,"upload":1}).sort("timestamp", direction=1)
 
 start_date=datetime.datetime(year=2017,month=1,day=1)
