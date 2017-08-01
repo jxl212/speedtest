@@ -21,10 +21,11 @@ import datetime, pymongo, os
 
 app = Flask(__name__)
 
-username = os.environ.get('mongo_user') or ""
-password = os.environ.get('mongo_pass') or ""
+username = os.environ.get('mongo_user') or None
+password = os.environ.get('mongo_pass') or None
 credential =''
-if username != '' and password != '': username+":"+password+"@"
+if (username is not None) and (password is not None): 
+  credential=username+":"+password+"@"
 shard0="box1-shard-00-00-kkflw.mongodb.net:27017"
 shard1="box1-shard-00-01-kkflw.mongodb.net:27017"
 shard2="box1-shard-00-02-kkflw.mongodb.net:27017"
