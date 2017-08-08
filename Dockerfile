@@ -1,8 +1,8 @@
-FROM gcr.io/google-appengine/python
+FROM python:alpine
 MAINTAINER Jeremy L "jeremy212@gmail.com"
 
 ADD . /app
-WORKDIR: /app
+WORKDIR /app
 RUN virtualenv .env/
 SOURCE .env/bin/activate
 # Setting these environment variables are the same as running
