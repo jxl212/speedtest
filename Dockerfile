@@ -4,7 +4,7 @@ MAINTAINER Jeremy L "jeremy212@gmail.com"
 ADD . /app
 WORKDIR /app
 RUN virtualenv .env/
-SOURCE .env/bin/activate
+RUN source .env/bin/activate
 # Setting these environment variables are the same as running
 ENV PATH ./env/bin:$PATH
 
