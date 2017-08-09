@@ -13,4 +13,4 @@ RUN pip install -r /app/requirements.txt
 
 # Run a WSGI server to serve the application. gunicorn must be declared as
 # a dependency in requirements.txt.
-CMD gunicorn -b :$PORT main:app --reload
+CMD gunicorn -w 4 --threads 2 -b :$PORT --chdir /app main:app --reload
